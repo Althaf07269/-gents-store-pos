@@ -1,0 +1,45 @@
+<div class="thermal-receipt" style="--receipt-mm: {{ store.receipt_width_mm }};">
+  <div class="receipt-center receipt-title">{{ store.store_name }}</div>
+  {% if store.address %}<div class="receipt-center receipt-small">{{ store.address|linebreaksbr }}</div>{% endif %}
+  {% if store.phone %}<div class="receipt-center receipt-small">Ph: {{ store.phone }}</div>{% endif %}
+  {% if store.receipt_header %}
+  {% for line in store.receipt_header.splitlines %}
+  {% if line.strip %}<div class="receipt-center receipt-small">{{ line.strip }}</div>{% endif %}
+  {% endfor %}
+  {% endif %}
+  <div class="receipt-rule"></div>
+  <div class="receipt-center"><strong>Bill: {{ sale.bill_no }}</strong></div>
+  <div class="receipt-center receipt-small">{{ sale.created_at|date:"d-m-Y" }} {{ sale.created_at|time:"h:i A" }}</div>
+  {% if sale.customer %}
+  {% if sale.customer.name %}<div class="receipt-center receipt-small">{{ sale.customer.name }}</div>{% endif %}
+  {% if sale.customer.phone %}<div class="receipt-center receipt-small">{{ sale.customer.phone }}</div>{% endif %}
+  {% endif %}
+  <div class="receipt-rule"></div>
+  <table class="receipt-items">
+    <thead><tr><th>Item</th><th class="r">Amt</th></tr></thead>
+    <tbody>
+    {% for it in sale.items.all %}
+    <tr>
+      <td>{{ it.product.name }} <span class="qty">x{{ it.quantity }}</span>
+        {% if it.product.size or it.product.barcode %}
+        <div class="receipt-meta">{% if it.product.size %}{{ it.product.size }}{% endif %}{% if it.product.barcode %} · {{ it.product.barcode }}{% endif %}</div>
+        {% endif %}
+      </td>
+      <td class="r">{{ store.currency }}{{ it.total }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <div class="receipt-rule"></div>
+  <div class="receipt-row"><span>Subtotal</span><span>{{ store.currency }}{{ sale.subtotal }}</span></div>
+  {% if sale.discount %}<div class="receipt-row"><span>Discount</span><span>-{{ store.currency }}{{ sale.discount }}</span></div>{% endif %}
+  <div class="receipt-row receipt-total"><span>TOTAL</span><span>{{ store.currency }}{{ sale.total }}</span></div>
+  <div class="receipt-row receipt-small"><span>Payment</span><span>{{ sale.get_payment_method_display }}</span></div>
+  <div class="receipt-rule"></div>
+  {% if store.receipt_show_barcode %}
+  <div class="receipt-barcode"><img src="{{ barcode_uri }}" alt="{{ sale.bill_no }}"></div>
+  {% endif %}
+  {% for line in store.receipt_footer.splitlines %}
+  {% if line.strip %}<div class="receipt-center receipt-footer">{{ line.strip }}</div>{% endif %}
+  {% endfor %}
+</div>

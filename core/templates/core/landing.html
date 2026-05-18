@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if store %}{{ store.store_name }}{% else %}SEE7 CLOTHINGS{% endif %} — Online POS</title>
+  <link rel="stylesheet" href="/static/core/css/style.css">
+</head>
+<body class="landing-body">
+  <header class="landing-nav">
+    <span class="landing-logo">{% if store %}{{ store.store_name }}{% else %}SEE7 CLOTHINGS{% endif %}</span>
+    <a class="linkbtn primary" href="{% url 'login' %}">Login</a>
+  </header>
+
+  <section class="hero">
+    <div class="hero-content">
+      <p class="hero-badge">Welcome · Online POS System</p>
+      <h1>SEE7<br><span>CLOTHINGS POS</span></h1>
+      <p class="hero-text">
+        Smart billing, inventory, purchase &amp; sales reports for your clothing store.
+        Manage store settings and daily operations from your account.
+      </p>
+      <div class="hero-actions">
+        <a class="linkbtn primary hero-btn" href="{% url 'login' %}">Login to POS</a>
+      </div>
+    </div>
+    <div class="hero-cards">
+      <div class="hero-card"><b>Billing</b><p>Fast POS checkout</p></div>
+      <div class="hero-card"><b>Inventory</b><p>Stock tracking</p></div>
+      <div class="hero-card"><b>Reports</b><p>Sales &amp; profit</p></div>
+      <div class="hero-card"><b>Purchase</b><p>Supplier invoices</p></div>
+    </div>
+  </section>
+
+  <section class="features" id="features">
+    <h2>SEE7 CLOTHINGS — Store features</h2>
+    <div class="feature-grid">
+      <article><h3>POS billing</h3><p>Barcode scan, discounts, thermal bills &amp; WhatsApp.</p></article>
+      <article><h3>Store settings</h3><p>Client can update shop name, bill design &amp; more via admin settings.</p></article>
+      <article><h3>Purchase entry</h3><p>Supplier invoices and new stock with full product details.</p></article>
+      <article><h3>Secure access</h3><p>New login accounts are added only by the developer.</p></article>
+    </div>
+  </section>
+
+  <footer class="landing-footer">
+    <p>SEE7 CLOTHINGS · Online Point of Sale</p>
+    <a href="{% url 'login' %}">Login →</a>
+  </footer>
+</body>
+</html>

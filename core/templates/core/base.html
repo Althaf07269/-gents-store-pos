@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if store %}{{ store.store_name }}{% else %}SEE7 CLOTHINGS{% endif %}</title>
+  <link rel="stylesheet" href="/static/core/css/style.css">
+</head>
+<body>
+{% if user.is_authenticated %}
+<aside>
+  <h2>{% if store %}{{ store.store_name|truncatechars:20 }}{% else %}SEE7 CLOTHINGS{% endif %}</h2>
+  <p class="sidebar-user">{{ user.username }}{% if user.is_staff %} · Manager{% endif %}</p>
+  <a href="{% url 'dashboard' %}">Dashboard</a>
+  <a href="{% url 'pos' %}">Billing POS</a>
+  {% if user.is_staff %}
+  <a href="{% url 'purchase_add' %}">New Purchase</a>
+  <a href="{% url 'purchase_report' %}">Purchase Report</a>
+  {% endif %}
+  <a href="{% url 'stock' %}">Inventory</a>
+  <a href="{% url 'reports' %}">Sales Reports</a>
+  <form action="{% url 'logout' %}" method="post">{% csrf_token %}<button type="submit">Logout ({{ user.username }})</button></form>
+</aside>
+{% endif %}
+<main class="{% if not user.is_authenticated %}full{% endif %}">
+  {% for m in messages %}<div class="msg">{{ m }}</div>{% endfor %}
+  {% block content %}{% endblock %}
+</main>
+<script src="/static/core/js/app.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

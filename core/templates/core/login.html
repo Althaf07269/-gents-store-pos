@@ -1,0 +1,9 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<div class='login'>
+  <h1>SEE7 CLOTHINGS</h1>
+  <p class="muted">Login to POS</p>
+  <form method='post'>{% csrf_token %}{{ form.as_p }}<button class='primary'>Login</button></form>
+  <p class="login-links"><a href="{% url 'landing' %}">← Home</a></p>
+</div>
+{% endblock %}

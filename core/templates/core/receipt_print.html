@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Print {{ sale.bill_no }}</title>
+  <link rel="stylesheet" href="/static/core/css/style.css">
+</head>
+<body class="print-only-page receipt-w-{{ store.receipt_width_mm }}">
+  <div class="print-toolbar no-print">
+    <button type="button" class="linkbtn primary" onclick="window.print()">Print</button>
+    <a class="linkbtn" href="{% url 'invoice' sale.id %}">Back to bill</a>
+    <a class="linkbtn whatsapp" href="{% url 'invoice' sale.id %}">WhatsApp bill</a>
+    <a class="linkbtn" href="{% url 'invoice_pdf' sale.id %}" download>PDF</a>
+  </div>
+  {% include 'core/receipt_body.html' %}
+  <script>window.addEventListener('load', function () { setTimeout(function () { window.print(); }, 400); });</script>
+</body>
+</html>

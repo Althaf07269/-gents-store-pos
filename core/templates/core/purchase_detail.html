@@ -1,0 +1,29 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<h1>Purchase: {{ purchase.invoice_no }}</h1>
+<p class="muted">
+  Supplier: <strong>{{ purchase.supplier|default:"—" }}</strong> ·
+  Date: <strong>{{ purchase.purchase_date }}</strong> ·
+  Status: <strong>{{ purchase.get_payment_status_display }}</strong>
+</p>
+{% if purchase.notes %}<p>Notes: {{ purchase.notes }}</p>{% endif %}
+
+<table>
+  <tr><th>Product</th><th>Barcode</th><th>Qty</th><th>Purchase rate</th><th>Sales rate</th><th>Total</th></tr>
+  {% for it in purchase.items.all %}
+  <tr>
+    <td>{{ it.product.name }}</td>
+    <td>{{ it.product.barcode }}</td>
+    <td>{{ it.quantity }}</td>
+    <td>₹{{ it.price }}</td>
+    <td>₹{{ it.product.selling_price }}</td>
+    <td>₹{{ it.line_total }}</td>
+  </tr>
+  {% endfor %}
+</table>
+<h2>Total: ₹{{ purchase.total_amount }}</h2>
+<div class="btn-row">
+  <a class="linkbtn primary" href="{% url 'purchase_edit' purchase.id %}">Edit purchase</a>
+  <a class="linkbtn" href="{% url 'purchase_report' %}">← Back to purchase report</a>
+</div>
+{% endblock %}

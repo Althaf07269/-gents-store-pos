@@ -1,0 +1,26 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<style>
+@media print {
+  @page { size: {{ store.label_width_mm }}mm {{ store.label_height_mm }}mm; margin: 1mm; }
+  aside, .no-print { display: none !important; }
+  main { margin: 0 !important; padding: 0 !important; }
+}
+</style>
+<div class="label-page no-screen-padding">
+  <p class="no-print muted">Label size: {{ store.label_width_mm }}×{{ store.label_height_mm }} mm — set in <a href="{% url 'settings' %}">Settings</a></p>
+  <div class="thermal-label" style="--label-w: {{ store.label_width_mm }}; --label-h: {{ store.label_height_mm }};">
+    <div class="label-store">{{ store.store_name }}</div>
+    <div class="label-name">{{ product.name }}</div>
+    {% if product.size %}<div class="label-meta">Size: {{ product.size }}</div>{% endif %}
+    {% if product.color %}<div class="label-meta">Color: {{ product.color }}</div>{% endif %}
+    <div class="label-price">{{ store.currency }}{{ product.selling_price }}</div>
+    <div class="label-barcode"><img src="{{ barcode_uri }}" alt="{{ product.barcode }}"></div>
+    <div class="label-code">{{ product.barcode }}</div>
+  </div>
+  <div class="no-print btn-row" style="margin-top:16px">
+    <button type="button" class="linkbtn primary" onclick="window.print()">Print label</button>
+    <a class="linkbtn" href="{% url 'stock' %}">Back to inventory</a>
+  </div>
+</div>
+{% endblock %}

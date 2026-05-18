@@ -1,0 +1,45 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<h1>Purchase Report</h1>
+<p class="muted">Search purchases by supplier, invoice number, or date range.</p>
+
+<form method="get" class="filter-bar">
+  <label>Supplier
+    <select name="supplier">
+      <option value="">All suppliers</option>
+      {% for s in suppliers %}
+      <option value="{{ s.id }}" {% if supplier_id == s.id|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Invoice no<input name="invoice" value="{{ invoice_q }}" placeholder="Search invoice"></label>
+  <label>From<input type="date" name="from" value="{{ date_from }}"></label>
+  <label>To<input type="date" name="to" value="{{ date_to }}"></label>
+  <button type="submit" class="primary">Search</button>
+  <a class="linkbtn" href="{% url 'purchase_add' %}">+ New Purchase</a>
+</form>
+
+<div class="cards">
+  <div class="card"><b>Total purchases</b><h2>{{ summary_count }}</h2></div>
+  <div class="card"><b>Total amount</b><h2>₹{{ summary_total }}</h2></div>
+</div>
+
+<table>
+  <tr>
+    <th>Invoice</th><th>Supplier</th><th>Date</th><th>Items</th><th>Total</th><th>Status</th><th></th>
+  </tr>
+  {% for p in items %}
+  <tr>
+    <td><a href="{% url 'purchase_detail' p.id %}">{{ p.invoice_no }}</a></td>
+    <td>{{ p.supplier|default:"—" }}</td>
+    <td>{{ p.purchase_date }}</td>
+    <td>{{ p.items.count }}</td>
+    <td>₹{{ p.total_amount }}</td>
+    <td>{{ p.get_payment_status_display }}</td>
+    <td><a href="{% url 'purchase_detail' p.id %}">View</a> · <a href="{% url 'purchase_edit' p.id %}">Edit</a></td>
+  </tr>
+  {% empty %}
+  <tr><td colspan="7">No purchases found for this filter.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

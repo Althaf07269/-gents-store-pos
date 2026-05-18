@@ -1,0 +1,263 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<h1>{% if purchase %}Edit Purchase{% else %}New Purchase{% endif %}</h1>
+<p class="muted">Supplier, invoice, add products with purchase rate and sales rate — stock updates on save.</p>
+
+<div class="purchase-layout" id="purchaseForm" data-save-url="{% if purchase %}{% url 'update_purchase' purchase.id %}{% else %}{% url 'create_purchase' %}{% endif %}">
+  <section class="purchase-panel">
+    <h3>1. Supplier</h3>
+    <label>Select supplier
+      <select id="supplierId" onchange="loadSupplier()">
+        <option value="">— Select —</option>
+        {% for s in suppliers %}<option value="{{ s.id }}" {% if purchase.supplier_id == s.id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+      </select>
+    </label>
+    <div class="supplier-edit" id="supplierEdit">
+      <label>Name<input id="supName" placeholder="Supplier name" value="{% if purchase.supplier %}{{ purchase.supplier.name }}{% endif %}"></label>
+      <label>Phone<input id="supPhone" placeholder="Phone" value="{% if purchase.supplier %}{{ purchase.supplier.phone }}{% endif %}"></label>
+      <label>Address<textarea id="supAddress" rows="2">{% if purchase.supplier %}{{ purchase.supplier.address }}{% endif %}</textarea></label>
+      <div class="btn-row">
+        <button type="button" class="linkbtn primary" onclick="saveSupplier()">Save Supplier</button>
+        <button type="button" class="linkbtn" onclick="clearSupplierForm()">Clear / New</button>
+      </div>
+    </div>
+
+    <h3>2. Invoice</h3>
+    <label>Invoice number *<input id="invoiceNo" placeholder="Supplier bill no" value="{% if purchase %}{{ purchase.invoice_no }}{% endif %}"></label>
+    <label>Date<input type="date" id="purchaseDate" value="{% if purchase %}{{ purchase.purchase_date|date:'Y-m-d' }}{% endif %}"></label>
+    <label>Payment status
+      <select id="paymentStatus">
+        <option value="paid" {% if purchase.payment_status == 'paid' %}selected{% endif %}>Paid</option>
+        <option value="pending" {% if purchase.payment_status == 'pending' %}selected{% endif %}>Pending</option>
+        <option value="partial" {% if purchase.payment_status == 'partial' %}selected{% endif %}>Partial</option>
+      </select>
+    </label>
+  </section>
+
+  <section class="purchase-panel">
+    <h3>3. Add products</h3>
+    <div class="tab-btns">
+      <button type="button" class="linkbtn primary" id="tabExisting" onclick="showTab('existing')">Existing product</button>
+      <button type="button" class="linkbtn" id="tabNew" onclick="showTab('new')">+ New product</button>
+    </div>
+
+    <div id="panelExisting">
+      <input id="purchaseSearch" placeholder="Search name or barcode">
+      <button type="button" onclick="purchaseLookup()">Search</button>
+      <div id="purchaseResults"></div>
+    </div>
+
+    <div id="panelNew" style="display:none" class="new-product-form">
+      <label>Name *<input id="npName"></label>
+      <label>Barcode *<input id="npBarcode"></label>
+      <label>Category
+        <select id="npCategory">
+          <option value="">—</option>
+          {% for c in categories %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+        </select>
+      </label>
+      <div class="inline-fields">
+        <label>Brand<input id="npBrand"></label>
+        <label>Size<input id="npSize"></label>
+      </div>
+      <label>Color<input id="npColor"></label>
+      <div class="inline-fields">
+        <label>Purchase rate *<input type="number" step="0.01" id="npPurchase"></label>
+        <label>Sales rate *<input type="number" step="0.01" id="npSelling"></label>
+      </div>
+      <div class="inline-fields">
+        <label>Qty *<input type="number" min="1" id="npQty" value="1"></label>
+        <label>Min stock alert<input type="number" id="npMinStock" value="5"></label>
+      </div>
+      <button type="button" class="primary" onclick="addNewProductToCart()">Add to purchase list</button>
+    </div>
+
+    <h3>Purchase items</h3>
+    <table id="purchaseCart"><tr><th>Product</th><th>Qty</th><th>Purchase rate</th><th>Sales rate</th><th>Total</th><th></th></tr></table>
+    <h2 id="purchaseGrand">Total: ₹0.00</h2>
+    <button type="button" class="primary" onclick="savePurchase()">{% if purchase %}Update Purchase{% else %}Save Purchase{% endif %}</button>
+    <a class="linkbtn" href="{% url 'purchase_report' %}">Purchase report</a>
+  </section>
+</div>
+{% csrf_token %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let purchaseCart = [];
+let editingSupplierId = document.getElementById('supplierId').value || null;
+const purchaseId = {% if purchase %}{{ purchase.id }}{% else %}null{% endif %};
+if (!document.getElementById('purchaseDate').value) {
+  document.getElementById('purchaseDate').value = new Date().toISOString().slice(0, 10);
+}
+
+function showTab(t) {
+  document.getElementById('panelExisting').style.display = t === 'existing' ? '' : 'none';
+  document.getElementById('panelNew').style.display = t === 'new' ? '' : 'none';
+  document.getElementById('tabExisting').classList.toggle('primary', t === 'existing');
+  document.getElementById('tabNew').classList.toggle('primary', t === 'new');
+}
+
+async function loadSupplier() {
+  const id = document.getElementById('supplierId').value;
+  editingSupplierId = id || null;
+  if (!id) { clearSupplierForm(false); return; }
+  const r = await fetch('/api/supplier/' + id + '/');
+  const data = await r.json();
+  if (data.ok) {
+    document.getElementById('supName').value = data.supplier.name;
+    document.getElementById('supPhone').value = data.supplier.phone || '';
+    document.getElementById('supAddress').value = data.supplier.address || '';
+  }
+}
+
+function clearSupplierForm(clearSelect) {
+  editingSupplierId = null;
+  if (clearSelect !== false) document.getElementById('supplierId').value = '';
+  document.getElementById('supName').value = '';
+  document.getElementById('supPhone').value = '';
+  document.getElementById('supAddress').value = '';
+}
+
+async function saveSupplier() {
+  const payload = {
+    id: editingSupplierId,
+    name: document.getElementById('supName').value,
+    phone: document.getElementById('supPhone').value,
+    address: document.getElementById('supAddress').value,
+  };
+  const r = await fetch('{% url "supplier_save" %}', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() },
+    body: JSON.stringify(payload),
+  });
+  const data = await r.json();
+  if (!data.ok) { alert(data.error); return; }
+  const sel = document.getElementById('supplierId');
+  let opt = [...sel.options].find(o => o.value == data.supplier.id);
+  if (!opt) {
+    opt = document.createElement('option');
+    opt.value = data.supplier.id;
+    sel.appendChild(opt);
+  }
+  opt.textContent = data.supplier.name;
+  sel.value = data.supplier.id;
+  editingSupplierId = data.supplier.id;
+  alert('Supplier saved');
+}
+
+async function purchaseLookup() {
+  const q = document.getElementById('purchaseSearch').value;
+  if (!q) return;
+  const r = await fetch('/api/product/?q=' + encodeURIComponent(q));
+  const data = await r.json();
+  if (data.products.length === 1) { addExistingProduct(data.products[0]); return; }
+  document.getElementById('purchaseResults').innerHTML = data.products.map((p, i) => {
+    window['pick'+i] = p;
+    return `<div class="result" onclick="addExistingProduct(window.pick${i})"><b>${p.name}</b><br>Purchase ₹${p.purchase_price} · Sale ₹${p.price} | ${p.barcode}</div>`;
+  }).join('') || '<p class="muted">No product found</p>';
+}
+
+function addExistingProduct(p) {
+  let item = purchaseCart.find(x => !x.is_new && x.id === p.id);
+  if (item) item.qty++;
+  else purchaseCart.push({
+    is_new: false, id: p.id, name: p.name, qty: 1,
+    price: p.purchase_price || 0,
+    selling_price: p.price || 0,
+    barcode: p.barcode,
+  });
+  renderPurchaseCart();
+  document.getElementById('purchaseResults').innerHTML = '';
+  document.getElementById('purchaseSearch').value = '';
+}
+
+function addNewProductToCart() {
+  const name = document.getElementById('npName').value.trim();
+  const barcode = document.getElementById('npBarcode').value.trim();
+  const purchaseRate = parseFloat(document.getElementById('npPurchase').value);
+  const sellingRate = parseFloat(document.getElementById('npSelling').value);
+  const qty = parseInt(document.getElementById('npQty').value) || 1;
+  if (!name || !barcode || !purchaseRate || !sellingRate) {
+    alert('Name, barcode, purchase rate and sales rate are required');
+    return;
+  }
+  purchaseCart.push({
+    is_new: true, uid: Date.now(), name, barcode,
+    category_id: document.getElementById('npCategory').value,
+    brand: document.getElementById('npBrand').value,
+    size: document.getElementById('npSize').value,
+    color: document.getElementById('npColor').value,
+    purchase_price: purchaseRate,
+    selling_price: sellingRate,
+    min_stock_alert: parseInt(document.getElementById('npMinStock').value) || 5,
+    qty,
+    price: purchaseRate,
+  });
+  renderPurchaseCart();
+  ['npName','npBarcode','npBrand','npSize','npColor','npPurchase','npSelling'].forEach(id => document.getElementById(id).value = '');
+}
+
+function renderPurchaseCart() {
+  let html = '<tr><th>Product</th><th>Qty</th><th>Purchase rate</th><th>Sales rate</th><th>Total</th><th></th></tr>';
+  let sub = 0;
+  purchaseCart.forEach((it, i) => {
+    const purchaseRate = parseFloat(it.price);
+    const salesRate = parseFloat(it.selling_price || it.price);
+    const total = it.qty * purchaseRate;
+    sub += total;
+    const tag = it.is_new ? ' <span class="badge">NEW</span>' : '';
+    html += `<tr><td>${it.name}${tag}<br><small>${it.barcode || ''}</small></td>
+      <td><input type="number" min="1" value="${it.qty}" onchange="purchaseCart[${i}].qty=parseInt(this.value);renderPurchaseCart()"></td>
+      <td><input type="number" step="0.01" value="${purchaseRate.toFixed(2)}" onchange="purchaseCart[${i}].price=parseFloat(this.value);renderPurchaseCart()"></td>
+      <td><input type="number" step="0.01" value="${salesRate.toFixed(2)}" onchange="purchaseCart[${i}].selling_price=parseFloat(this.value);renderPurchaseCart()"></td>
+      <td>₹${total.toFixed(2)}</td>
+      <td><button type="button" onclick="purchaseCart.splice(${i},1);renderPurchaseCart()">X</button></td></tr>`;
+  });
+  document.getElementById('purchaseCart').innerHTML = html;
+  document.getElementById('purchaseGrand').innerText = 'Total: ₹' + sub.toFixed(2);
+}
+
+async function savePurchase() {
+  const items = purchaseCart.map(it => {
+    if (it.is_new) return {
+      is_new: true, name: it.name, barcode: it.barcode, category_id: it.category_id,
+      brand: it.brand, size: it.size, color: it.color,
+      price: it.price, selling_price: it.selling_price, min_stock_alert: it.min_stock_alert, qty: it.qty,
+    };
+    return { id: it.id, qty: it.qty, price: it.price, selling_price: it.selling_price };
+  });
+  const payload = {
+    supplier_id: document.getElementById('supplierId').value,
+    supplier_name: document.getElementById('supName').value,
+    invoice_no: document.getElementById('invoiceNo').value,
+    purchase_date: document.getElementById('purchaseDate').value,
+    payment_status: document.getElementById('paymentStatus').value,
+    items,
+  };
+  const url = document.getElementById('purchaseForm').dataset.saveUrl;
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() },
+    body: JSON.stringify(payload),
+  });
+  const data = await r.json();
+  if (data.ok) location.href = data.url;
+  else alert(data.error || 'Error');
+}
+
+document.getElementById('purchaseSearch')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); purchaseLookup(); }
+});
+
+{% if purchase %}
+purchaseCart = [
+  {% for it in purchase.items.all %}
+  { is_new: false, id: {{ it.product.id }}, name: "{{ it.product.name|escapejs }}", barcode: "{{ it.product.barcode|escapejs }}", qty: {{ it.quantity }}, price: {{ it.price }}, selling_price: {{ it.product.selling_price }} }{% if not forloop.last %},{% endif %}
+  {% endfor %}
+];
+renderPurchaseCart();
+if (document.getElementById('supplierId').value) editingSupplierId = document.getElementById('supplierId').value;
+{% endif %}
+</script>
+{% endblock %}

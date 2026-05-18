@@ -1,0 +1,86 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<h1>Sales Reports</h1>
+<p class="muted">Daily, monthly, and annual sales with profit, bills, and payment breakdown.</p>
+
+<form method="get" class="filter-bar">
+  <label>Period
+    <select name="period" id="periodSelect" onchange="togglePeriodFields()">
+      <option value="daily" {% if period == 'daily' %}selected{% endif %}>Daily</option>
+      <option value="monthly" {% if period == 'monthly' %}selected{% endif %}>Monthly</option>
+      <option value="annual" {% if period == 'annual' %}selected{% endif %}>Annual</option>
+    </select>
+  </label>
+  <label id="fieldDaily">Date<input type="date" name="date" value="{{ date_str }}"></label>
+  <label id="fieldMonthly" style="display:none">Month<input type="month" name="month" value="{{ month_str }}"></label>
+  <label id="fieldAnnual" style="display:none">Year<input type="number" name="year" value="{{ year_str }}" min="2020" max="2099"></label>
+  <button type="submit" class="primary">Show report</button>
+</form>
+
+<p class="report-range">Report: <strong>{{ start }}</strong> to <strong>{{ end }}</strong></p>
+
+<div class="cards">
+  <div class="card"><b>Total sales</b><h2>₹{{ total_sales|floatformat:2 }}</h2></div>
+  <div class="card"><b>Item profit</b><h2>₹{{ total_profit|floatformat:2 }}</h2></div>
+  <div class="card"><b>Cost of goods</b><h2>₹{{ total_cost|floatformat:2 }}</h2></div>
+  <div class="card"><b>Bills</b><h2>{{ bill_count }}</h2></div>
+  <div class="card"><b>Avg bill</b><h2>₹{{ avg_bill|floatformat:2 }}</h2></div>
+  <div class="card"><b>Purchases (period)</b><h2>₹{{ purchase_total|floatformat:2 }}</h2></div>
+</div>
+
+<div class="report-grid">
+  <section class="report-panel">
+    <h2>Payment breakdown</h2>
+    <table>
+      <tr><th>Method</th><th>Amount</th></tr>
+      {% for method, amount in payment_breakdown.items %}
+      <tr><td>{{ method|upper }}</td><td>₹{{ amount|floatformat:2 }}</td></tr>
+      {% empty %}
+      <tr><td colspan="2">No sales in this period</td></tr>
+      {% endfor %}
+    </table>
+    <p class="muted">Discount: ₹{{ total_discount|floatformat:2 }}</p>
+  </section>
+
+  <section class="report-panel">
+    <h2>Top products</h2>
+    <table>
+      <tr><th>Product</th><th>Qty</th><th>Sales</th></tr>
+      {% for name, data in top_products %}
+      <tr><td>{{ name }}</td><td>{{ data.qty }}</td><td>₹{{ data.amount|floatformat:2 }}</td></tr>
+      {% empty %}
+      <tr><td colspan="3">No data</td></tr>
+      {% endfor %}
+    </table>
+  </section>
+</div>
+
+<h2>All bills ({{ bill_count }})</h2>
+<table>
+  <tr><th>Bill no</th><th>Date</th><th>Customer</th><th>Payment</th><th>Sales</th><th>Cost</th><th>Profit</th><th></th></tr>
+  {% for row in bill_rows %}
+  <tr>
+    <td><a href="{% url 'invoice' row.sale.id %}">{{ row.sale.bill_no }}</a></td>
+    <td>{{ row.sale.created_at|date:"d-m-Y H:i" }}</td>
+    <td>{{ row.sale.customer|default:"Walk-in" }}</td>
+    <td>{{ row.sale.get_payment_method_display }}</td>
+    <td>₹{{ row.sale.total|floatformat:2 }}</td>
+    <td>₹{{ row.cost|floatformat:2 }}</td>
+    <td>₹{{ row.profit|floatformat:2 }}</td>
+    <td><a href="{% url 'invoice' row.sale.id %}">View</a></td>
+  </tr>
+  {% empty %}
+  <tr><td colspan="8">No sales in this period.</td></tr>
+  {% endfor %}
+</table>
+
+<script>
+function togglePeriodFields() {
+  const p = document.getElementById('periodSelect').value;
+  document.getElementById('fieldDaily').style.display = p === 'daily' ? '' : 'none';
+  document.getElementById('fieldMonthly').style.display = p === 'monthly' ? '' : 'none';
+  document.getElementById('fieldAnnual').style.display = p === 'annual' ? '' : 'none';
+}
+togglePeriodFields();
+</script>
+{% endblock %}
