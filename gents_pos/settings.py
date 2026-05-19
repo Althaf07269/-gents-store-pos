@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import dj_database_url
 
 # Base Directory
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -72,15 +73,20 @@ WSGI_APPLICATION = 'gents_pos.wsgi.application'
 
 # PostgreSQL Database Configuration
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'gents_pos',
-        'USER': 'postgres',
-        'PASSWORD': 'admin123',
-        'HOST': 'localhost',
-        'PORT': '5433',
-    }
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL')
+    )
 }
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'gents_pos',
+#         'USER': 'postgres',
+#         'PASSWORD': 'admin123',
+#         'HOST': 'localhost',
+#         'PORT': '5433',
+#     }
+# }
 
 # Password Validation
 AUTH_PASSWORD_VALIDATORS = []
