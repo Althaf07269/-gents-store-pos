@@ -24,6 +24,7 @@
 <h2>Total: ₹{{ purchase.total_amount }}</h2>
 <div class="btn-row">
   <a class="linkbtn primary" href="{% url 'purchase_edit' purchase.id %}">Edit purchase</a>
+  <a class="linkbtn primary" href="{% url 'purchase_labels' purchase.id %}" target="_blank">Print product Barcode</a>
   <a class="linkbtn" href="{% url 'purchase_report' %}">← Back to purchase report</a>
 </div>
 {% endblock %}
