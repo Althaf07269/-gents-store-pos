@@ -491,3 +491,36 @@ def reports(request):
         'payment_breakdown': payment_breakdown,
         'top_products': top_products,
     })
+    
+@admin_required
+def purchase_labels(request, pk):
+    purchase = get_object_or_404(
+        Purchase.objects
+        .select_related('supplier')
+        .prefetch_related('items__product'),
+        pk=pk,
+    )
+
+    store = get_store()
+
+    label_items = []
+
+    for item in purchase.items.all():
+
+        # safety check
+        quantity = max(item.quantity, 0)
+
+        for _ in range(quantity):
+
+            label_items.append({
+                'product': item.product,
+                'barcode_uri': receipt.barcode_data_uri(
+                    item.product.barcode
+                ),
+            })
+
+    return render(request, 'core/purchase_labels.html', {
+        'purchase': purchase,
+        'store': store,
+        'label_items': label_items,
+    })
