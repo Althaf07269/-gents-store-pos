@@ -1,0 +1,224 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+
+<style>
+
+  .label-grid {
+    display: grid;
+
+    /* 2 labels per row */
+    grid-template-columns: repeat(2, 38mm);
+
+    gap: 1mm;
+
+    justify-content: start;
+  }
+
+  .thermal-label {
+
+    width: 38mm;
+    height: 24mm;
+
+    box-sizing: border-box;
+
+    padding: 1.2mm;
+
+    overflow: hidden;
+
+    border: 1px dashed #ccc;
+
+    text-align: center;
+
+    page-break-inside: avoid;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .label-store {
+    font-size: 7px;
+    font-weight: bold;
+    line-height: 1;
+  }
+
+  .label-name {
+    font-size: 8px;
+    font-weight: bold;
+    line-height: 1.05;
+
+    overflow: hidden;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .label-meta {
+    font-size: 6px;
+    line-height: 1;
+  }
+
+  .label-price {
+    font-size: 9px;
+    font-weight: bold;
+    line-height: 1;
+  }
+
+  .label-barcode img {
+    width: 100%;
+    height: 10mm;
+
+    object-fit: contain;
+  }
+
+  .label-code {
+    font-size: 6px;
+    line-height: 1;
+  }
+
+  .btn-row {
+    margin-bottom: 16px;
+  }
+
+  @media print {
+
+    body * {
+      visibility: hidden;
+    }
+
+    .label-grid,
+    .label-grid * {
+      visibility: visible;
+    }
+
+    .label-grid {
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+
+    .thermal-label {
+      border: none;
+    }
+
+    .btn-row,
+    h1,
+    p {
+      display: none !important;
+    }
+
+    @page {
+      margin: 0;
+      size: auto;
+    }
+  }
+
+</style>
+
+
+<h1>
+  Purchase Labels: {{ purchase.invoice_no }}
+</h1>
+
+<p class="muted">
+  Supplier:
+  <strong>{{ purchase.supplier|default:"—" }}</strong>
+
+  · Date:
+  <strong>{{ purchase.purchase_date }}</strong>
+</p>
+
+
+<div class="btn-row">
+
+  <button
+    type="button"
+    class="linkbtn primary"
+    onclick="window.print()">
+
+    Print All Labels
+
+  </button>
+
+  <a
+    class="linkbtn"
+    href="{% url 'purchase_detail' purchase.id %}">
+
+    ← Back to Purchase
+
+  </a>
+
+</div>
+
+
+<div class="label-grid">
+
+  {% for item in label_items %}
+
+  <div class="thermal-label">
+
+    <div class="label-store">
+      {{ store.store_name }}
+    </div>
+
+    <div class="label-name">
+      {{ item.product.name }}
+    </div>
+
+
+    {% if item.product.size %}
+    <div class="label-meta">
+      Size: {{ item.product.size }}
+    </div>
+    {% endif %}
+
+
+    {% if item.product.color %}
+    <div class="label-meta">
+      Color: {{ item.product.color }}
+    </div>
+    {% endif %}
+
+
+    <div class="label-price">
+      {{ store.currency }}{{ item.product.selling_price }}
+    </div>
+
+
+    <div class="label-barcode">
+
+      <img
+        src="{{ item.barcode_uri }}"
+        alt="{{ item.product.barcode }}">
+
+    </div>
+
+
+    <div class="label-code">
+      {{ item.product.barcode }}
+    </div>
+
+  </div>
+
+  {% endfor %}
+
+</div>
+
+
+<script>
+
+  window.addEventListener('load', function () {
+
+    setTimeout(function () {
+
+      window.print();
+
+    }, 300);
+
+  });
+
+</script>
+
+{% endblock %}
