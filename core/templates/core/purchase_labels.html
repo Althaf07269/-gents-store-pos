@@ -4,119 +4,209 @@
 
 <style>
 
-  .label-grid {
+/* =========================
+   LABEL GRID
+========================= */
+
+.label-grid {
+
     display: grid;
 
-    /* 2 labels per row */
     grid-template-columns: repeat(2, 38mm);
 
     gap: 1mm;
 
     justify-content: start;
-  }
+}
 
-  .thermal-label {
+
+/* =========================
+   THERMAL LABEL
+========================= */
+
+.thermal-label {
 
     width: 38mm;
+
     height: 24mm;
 
     box-sizing: border-box;
 
-    padding: 1.2mm;
+    padding: 1mm;
 
     overflow: hidden;
 
     border: 1px dashed #ccc;
 
+    background: #fff;
+
     text-align: center;
 
     page-break-inside: avoid;
 
+    break-inside: avoid-page;
+
     display: flex;
+
     flex-direction: column;
-    justify-content: space-between;
-  }
 
-  .label-store {
+    align-items: center;
+
+    justify-content: flex-start;
+}
+
+
+/* =========================
+   STORE NAME
+========================= */
+
+.label-store {
+
     font-size: 7px;
-    font-weight: bold;
-    line-height: 1;
-  }
 
-  .label-name {
-    font-size: 8px;
     font-weight: bold;
-    line-height: 1.05;
+
+    text-transform: uppercase;
+
+    line-height: 1;
+
+    color: #555;
+
+}
+
+
+/* =========================
+   PRODUCT NAME
+========================= */
+
+.label-name {
+
+    font-size: 9px;
+
+    font-weight: bold;
+
+    line-height: 1;
+
+    color: #000;
+
+    height: 5mm;
 
     overflow: hidden;
 
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-  }
+    word-break: break-word;
 
-  .label-meta {
-    font-size: 6px;
-    line-height: 1;
-  }
+    margin-bottom: .5mm;
+}
 
-  .label-price {
+
+/* =========================
+   PRICE
+========================= */
+
+.label-price {
+
     font-size: 9px;
-    font-weight: bold;
-    line-height: 1;
-  }
 
-  .label-barcode img {
+    font-weight: bold;
+
+    line-height: 1;
+
+    margin-bottom: .5mm;
+}
+
+
+/* =========================
+   BARCODE
+========================= */
+
+.label-barcode {
+
     width: 100%;
-    height: 10mm;
+}
+
+.label-barcode img {
+
+    width: 100%;
+
+    height: 9mm;
 
     object-fit: contain;
-  }
+}
 
-  .label-code {
+
+/* =========================
+   BARCODE NUMBER
+========================= */
+
+.label-code {
+
     font-size: 6px;
+
+    font-weight: 900;
+
     line-height: 1;
-  }
 
-  .btn-row {
+    letter-spacing: .5px;
+
+    margin-top: .5mm;
+
+    color: #000;
+}
+
+
+/* =========================
+   BUTTON ROW
+========================= */
+
+.btn-row {
+
     margin-bottom: 16px;
-  }
+}
 
-  @media print {
+
+/* =========================
+   PRINT MODE
+========================= */
+
+@media print {
 
     body * {
-      visibility: hidden;
+        visibility: hidden;
     }
 
     .label-grid,
     .label-grid * {
-      visibility: visible;
+        visibility: visible;
     }
 
     .label-grid {
-      position: absolute;
-      left: 0;
-      top: 0;
+
+        position: absolute;
+
+        left: 0;
+        top: 0;
     }
 
     .thermal-label {
-      border: none;
+
+        border: none;
     }
 
     .btn-row,
     h1,
     p {
-      display: none !important;
+        display: none !important;
     }
 
     @page {
-      margin: 0;
-      size: auto;
+
+        margin: 0;
+
+        size: auto;
     }
-  }
+}
 
 </style>
-
 
 <h1>
   Purchase Labels: {{ purchase.invoice_no }}
@@ -159,34 +249,22 @@
 
   <div class="thermal-label">
 
+    <!-- STORE NAME -->
     <div class="label-store">
       {{ store.store_name }}
     </div>
 
+    <!-- PRODUCT NAME -->
     <div class="label-name">
       {{ item.product.name }}
     </div>
 
-
-    {% if item.product.size %}
-    <div class="label-meta">
-      Size: {{ item.product.size }}
-    </div>
-    {% endif %}
-
-
-    {% if item.product.color %}
-    <div class="label-meta">
-      Color: {{ item.product.color }}
-    </div>
-    {% endif %}
-
-
+    <!-- PRICE -->
     <div class="label-price">
       {{ store.currency }}{{ item.product.selling_price }}
     </div>
 
-
+    <!-- BARCODE -->
     <div class="label-barcode">
 
       <img
@@ -195,7 +273,7 @@
 
     </div>
 
-
+    <!-- BARCODE NUMBER -->
     <div class="label-code">
       {{ item.product.barcode }}
     </div>
@@ -205,7 +283,6 @@
   {% endfor %}
 
 </div>
-
 
 <script>
 
